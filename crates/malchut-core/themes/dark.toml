@@ -1,0 +1,23 @@
+[palette]
+background = "#1f2328"
+foreground = "#e6edf3"
+accent = "#58a6ff"
+muted = "#9198a1"
+code_background = "#2d333b"
+line_highlight = "#4a4420"
+border = "#444c56"
+
+[code]
+theme = "OneHalfDark"
+
+[class.invert.palette]
+background = "#ffffff"
+foreground = "#24292f"
+accent = "#0969da"
+muted = "#6e7781"
+code_background = "#f3f4f6"
+line_highlight = "#fff3b0"
+border = "#d0d7de"
+
+[class.invert.code]
+theme = "InspiredGitHub"

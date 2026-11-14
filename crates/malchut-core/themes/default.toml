@@ -1,0 +1,76 @@
+# 組み込みの既定テーマ。ほかのテーマはこの内容への差分として読み込まれる。
+# 長さの単位は論理座標 (スライドの高さ 1080) での px。
+
+[palette]
+background = "#ffffff"
+foreground = "#24292f"
+accent = "#0969da"
+muted = "#6e7781"
+code_background = "#f3f4f6"
+line_highlight = "#fff3b0"
+border = "#d0d7de"
+
+[fonts]
+body = "Noto Sans CJK JP"
+heading = "Noto Sans CJK JP"
+mono = "monospace"
+
+[slide]
+padding_x = 110
+padding_y = 80
+align = "left"
+valign = "top"
+
+[text]
+size = 44
+line_height = 1.35
+block_spacing = 32
+
+[heading]
+sizes = [92, 68, 56, 48, 44, 40]
+weight = 700
+spacing = 40
+
+[list]
+indent = 56
+item_spacing = 14
+
+[code]
+size = 30
+min_size = 18
+line_height = 1.3
+padding = 28
+radius = 14
+theme = "InspiredGitHub"
+
+[quote]
+bar_width = 8
+indent = 40
+
+[table]
+padding_x = 28
+padding_y = 14
+border_width = 2
+
+[footer]
+size = 24
+margin = 36
+
+[class.lead.slide]
+align = "center"
+valign = "center"
+
+[class.lead.heading]
+sizes = [120, 84, 64, 52, 44, 40]
+
+[class.invert.palette]
+background = "#1f2328"
+foreground = "#e6edf3"
+accent = "#58a6ff"
+muted = "#9198a1"
+code_background = "#2d333b"
+line_highlight = "#4a4420"
+border = "#444c56"
+
+[class.invert.code]
+theme = "OneHalfDark"

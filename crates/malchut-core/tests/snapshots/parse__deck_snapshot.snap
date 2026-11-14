@@ -1,0 +1,359 @@
+---
+source: crates/malchut-core/tests/parse.rs
+expression: parse(SOURCE)
+---
+Deck {
+    meta: DeckMeta {
+        theme: Some(
+            "dark",
+        ),
+        size: Standard,
+    },
+    slides: [
+        Slide {
+            blocks: [
+                Heading {
+                    level: 1,
+                    inlines: [
+                        Text(
+                            "Title",
+                        ),
+                    ],
+                },
+            ],
+            props: SlideProps {
+                class: [
+                    "lead",
+                ],
+                paginate: true,
+                header: None,
+                footer: None,
+            },
+            notes: [
+                "発表者ノート",
+            ],
+            backgrounds: [],
+            side: None,
+            floats: [],
+            anchors: [
+                "title",
+            ],
+        },
+        Slide {
+            blocks: [
+                List(
+                    List {
+                        start: None,
+                        items: [
+                            ListItem {
+                                checked: None,
+                                blocks: [
+                                    Paragraph(
+                                        [
+                                            Text(
+                                                "item",
+                                            ),
+                                        ],
+                                    ),
+                                    List(
+                                        List {
+                                            start: None,
+                                            items: [
+                                                ListItem {
+                                                    checked: Some(
+                                                        true,
+                                                    ),
+                                                    blocks: [
+                                                        Paragraph(
+                                                            [
+                                                                Text(
+                                                                    "nested",
+                                                                ),
+                                                            ],
+                                                        ),
+                                                    ],
+                                                },
+                                            ],
+                                        },
+                                    ),
+                                ],
+                            },
+                        ],
+                    },
+                ),
+                Code(
+                    CodeBlock {
+                        lang: Some(
+                            "rust",
+                        ),
+                        code: "fn main() {}",
+                        highlight_lines: [
+                            1,
+                            3,
+                            4,
+                        ],
+                        numbered: true,
+                    },
+                ),
+                Diagram {
+                    kind: Mermaid,
+                    source: "graph LR",
+                },
+                Table(
+                    Table {
+                        alignments: [
+                            Center,
+                            Right,
+                        ],
+                        header: [
+                            [
+                                Text(
+                                    "a",
+                                ),
+                            ],
+                            [
+                                Text(
+                                    "b",
+                                ),
+                            ],
+                        ],
+                        rows: [
+                            [
+                                [
+                                    Text(
+                                        "1",
+                                    ),
+                                ],
+                                [
+                                    Text(
+                                        "2",
+                                    ),
+                                ],
+                            ],
+                        ],
+                    },
+                ),
+            ],
+            props: SlideProps {
+                class: [],
+                paginate: true,
+                header: None,
+                footer: Some(
+                    "foot",
+                ),
+            },
+            notes: [],
+            backgrounds: [],
+            side: None,
+            floats: [],
+            anchors: [],
+        },
+        Slide {
+            blocks: [
+                Quote(
+                    [
+                        Paragraph(
+                            [
+                                Text(
+                                    "quote ",
+                                ),
+                                Strong(
+                                    [
+                                        Text(
+                                            "bold",
+                                        ),
+                                    ],
+                                ),
+                                Text(
+                                    " ",
+                                ),
+                                Code(
+                                    "code",
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                Images(
+                    [
+                        Image {
+                            src: "a.png",
+                            alt: "alt text",
+                            caption: Some(
+                                "caption",
+                            ),
+                            width: Some(
+                                Percent(
+                                    Num(
+                                        50.0,
+                                    ),
+                                ),
+                            ),
+                            height: None,
+                            placement: Flow,
+                            align: None,
+                            crop: None,
+                            round: Num(
+                                8.0,
+                            ),
+                            shadow: true,
+                            opacity: Num(
+                                1.0,
+                            ),
+                        },
+                        Image {
+                            src: "b.svg",
+                            alt: "",
+                            caption: None,
+                            width: None,
+                            height: Some(
+                                Px(
+                                    Num(
+                                        300.0,
+                                    ),
+                                ),
+                            ),
+                            placement: Flow,
+                            align: None,
+                            crop: Some(
+                                [
+                                    Percent(
+                                        Num(
+                                            10.0,
+                                        ),
+                                    ),
+                                    Px(
+                                        Num(
+                                            0.0,
+                                        ),
+                                    ),
+                                    Percent(
+                                        Num(
+                                            80.0,
+                                        ),
+                                    ),
+                                    Percent(
+                                        Num(
+                                            100.0,
+                                        ),
+                                    ),
+                                ],
+                            ),
+                            round: Num(
+                                0.0,
+                            ),
+                            shadow: false,
+                            opacity: Num(
+                                1.0,
+                            ),
+                        },
+                    ],
+                ),
+            ],
+            props: SlideProps {
+                class: [],
+                paginate: true,
+                header: None,
+                footer: Some(
+                    "foot",
+                ),
+            },
+            notes: [],
+            backgrounds: [
+                Image {
+                    src: "bg.jpg",
+                    alt: "",
+                    caption: None,
+                    width: None,
+                    height: None,
+                    placement: Background {
+                        fit: Contain,
+                        split: Some(
+                            (
+                                Right,
+                                Num(
+                                    30.0,
+                                ),
+                            ),
+                        ),
+                    },
+                    align: None,
+                    crop: None,
+                    round: Num(
+                        0.0,
+                    ),
+                    shadow: false,
+                    opacity: Num(
+                        0.5,
+                    ),
+                },
+            ],
+            side: Some(
+                Image {
+                    src: "side.png",
+                    alt: "",
+                    caption: None,
+                    width: Some(
+                        Percent(
+                            Num(
+                                35.0,
+                            ),
+                        ),
+                    ),
+                    height: None,
+                    placement: Side(
+                        Left,
+                    ),
+                    align: None,
+                    crop: None,
+                    round: Num(
+                        0.0,
+                    ),
+                    shadow: false,
+                    opacity: Num(
+                        1.0,
+                    ),
+                },
+            ),
+            floats: [
+                Image {
+                    src: "logo.svg",
+                    alt: "",
+                    caption: None,
+                    width: Some(
+                        Px(
+                            Num(
+                                120.0,
+                            ),
+                        ),
+                    ),
+                    height: None,
+                    placement: At {
+                        x: Percent(
+                            Num(
+                                90.0,
+                            ),
+                        ),
+                        y: Percent(
+                            Num(
+                                10.0,
+                            ),
+                        ),
+                        anchor: TopRight,
+                    },
+                    align: None,
+                    crop: None,
+                    round: Num(
+                        0.0,
+                    ),
+                    shadow: false,
+                    opacity: Num(
+                        1.0,
+                    ),
+                },
+            ],
+            anchors: [],
+        },
+    ],
+    diagnostics: [],
+}
