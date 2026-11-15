@@ -6,3 +6,8 @@ members = ["crates/malchut-core", "crates/malchut"]
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
+
+[profile.release]
+lto = "thin"
+strip = true
+codegen-units = 1
