@@ -172,19 +172,139 @@ fn presenting(ctx: &Shared) -> bool {
     ctx.presenter.borrow().is_some()
 }
 
+/// 表示中のスライドに加えて、先に描いておくスライドの位置 (表示中からの差)。
+/// 進むほうを優先し、表示中と合わせて 4 枚を保持する。
+const PREFETCH: [isize; 3] = [1, -1, 2];
+
+/// 表示領域 1 つぶんの、描画済みスライドの置き場。
+/// 前後のスライドを手の空いたときに描いておき、切り替えを画像の転送だけで済ませる。
+#[derive(Default)]
+struct RenderCache {
+    /// レイアウト結果と、それを描いた画像。大きさは画像自身が持つ。
+    entries: Vec<(Rc<DisplayList>, gtk::cairo::ImageSurface)>,
+    /// 直近に表示した画像の大きさ (デバイスピクセル)。先読みもこの大きさで描く。
+    size: (i32, i32),
+    /// 先読みがアイドル処理として予約済みかどうか。
+    scheduled: bool,
+}
+
+impl RenderCache {
+    fn get(&self, list: &Rc<DisplayList>, size: (i32, i32)) -> Option<gtk::cairo::ImageSurface> {
+        self.entries
+            .iter()
+            .find(|(cached, surface)| {
+                Rc::ptr_eq(cached, list) && (surface.width(), surface.height()) == size
+            })
+            .map(|(_, surface)| surface.clone())
+    }
+
+    /// 無ければ描いて保持する。描けなかった場合は `None`。
+    fn render(
+        &mut self,
+        list: &Rc<DisplayList>,
+        size: (i32, i32),
+    ) -> Option<gtk::cairo::ImageSurface> {
+        if let Some(surface) = self.get(list, size) {
+            return Some(surface);
+        }
+        let surface =
+            gtk::cairo::ImageSurface::create(gtk::cairo::Format::Rgb24, size.0, size.1).ok()?;
+        let cr = gtk::cairo::Context::new(&surface).ok()?;
+        cr.scale(
+            f64::from(size.0) / list.width,
+            f64::from(size.1) / list.height,
+        );
+        paint(&cr, list).ok()?;
+        drop(cr);
+        self.entries.push((list.clone(), surface.clone()));
+        Some(surface)
+    }
+}
+
+/// `index` 枚目とその前後のうち、まだ描いていないものを 1 枚だけ描く。
+/// 残りがあれば自分を予約し直す。1 枚ずつにして、合間にキー入力を処理できるようにする。
+fn prefetch(ctx: &Rc<Shared>, cache: &Rc<RefCell<RenderCache>>, offset: usize) {
+    let state = ctx.state.borrow();
+    let mut cache_ref = cache.borrow_mut();
+    cache_ref.scheduled = false;
+    let shown = state.current() + offset;
+    let size = cache_ref.size;
+    let wanted: Vec<&Rc<DisplayList>> = std::iter::once(0)
+        .chain(PREFETCH)
+        .filter_map(|delta| state.list(shown.checked_add_signed(delta)?))
+        .collect();
+    // 離れたスライドと、内容や大きさが変わる前の画像は捨てる。
+    cache_ref.entries.retain(|(cached, surface)| {
+        (surface.width(), surface.height()) == size
+            && wanted.iter().any(|list| Rc::ptr_eq(list, cached))
+    });
+    let mut missing = wanted
+        .into_iter()
+        .filter(|list| cache_ref.get(list, size).is_none());
+    let Some(list) = missing.next() else { return };
+    let more = missing.next().is_some();
+    // 描けなかったときは繰り返さない。次に表示するときに改めて試す。
+    if cache_ref.render(list, size).is_some() && more {
+        schedule_prefetch(ctx, cache, &mut cache_ref, offset);
+    }
+}
+
+fn schedule_prefetch(
+    ctx: &Rc<Shared>,
+    cache: &Rc<RefCell<RenderCache>>,
+    cache_ref: &mut RenderCache,
+    offset: usize,
+) {
+    if cache_ref.scheduled {
+        return;
+    }
+    cache_ref.scheduled = true;
+    let (ctx, cache) = (ctx.clone(), cache.clone());
+    glib::idle_add_local_once(move || prefetch(&ctx, &cache, offset));
+}
+
 /// スライド 1 枚を、領域に収まる最大の大きさで中央に描く。
-fn draw_slide(cr: &gtk::cairo::Context, list: &DisplayList, width: f64, height: f64, mark: bool) {
+fn draw_slide(
+    cr: &gtk::cairo::Context,
+    list: &Rc<DisplayList>,
+    cache: &mut RenderCache,
+    (width, height): (f64, f64),
+    device_scale: f64,
+    mark: bool,
+) {
     let scale = (width / list.width).min(height / list.height);
+    // 画像はデバイスピクセルの大きさで持ち、表示時に拡大縮小が掛からないようにする。
+    let size = (
+        (list.width * scale * device_scale).round() as i32,
+        (list.height * scale * device_scale).round() as i32,
+    );
+    if size.0 <= 0 || size.1 <= 0 {
+        return;
+    }
+    cache.size = size;
     cr.translate(
         (width - list.width * scale) / 2.0,
         (height - list.height * scale) / 2.0,
     );
-    cr.scale(scale, scale);
-    cr.rectangle(0.0, 0.0, list.width, list.height);
-    cr.clip();
-    let _ = paint(cr, list);
+    let _ = cr.save();
+    match cache.render(list, size) {
+        Some(surface) => {
+            cr.scale(1.0 / device_scale, 1.0 / device_scale);
+            let _ = cr.set_source_surface(&surface, 0.0, 0.0);
+            let _ = cr.paint();
+        }
+        // 画像を確保できないときは、直接描く。
+        None => {
+            cr.scale(scale, scale);
+            cr.rectangle(0.0, 0.0, list.width, list.height);
+            cr.clip();
+            let _ = paint(cr, list);
+        }
+    }
+    let _ = cr.restore();
     if mark && list.overflow {
         // 内容が枠からあふれていることを、下端の赤い帯で示す。
+        cr.scale(scale, scale);
         cr.set_source_rgba(0.9, 0.1, 0.1, 0.85);
         cr.rectangle(0.0, list.height - 14.0, list.width, 14.0);
         let _ = cr.fill();
@@ -197,11 +317,19 @@ fn slide_area(ctx: &Rc<Shared>, offset: usize, mark_overflow: bool) -> gtk::Draw
     area.add_css_class("malchut-slide");
     {
         let ctx = ctx.clone();
-        area.set_draw_func(move |_, cr, width, height| {
+        let cache = Rc::new(RefCell::new(RenderCache::default()));
+        area.set_draw_func(move |area, cr, width, height| {
             let state = ctx.state.borrow();
             if let Some(list) = state.list(state.current() + offset) {
                 let mark = mark_overflow && !presenting(&ctx);
-                draw_slide(cr, list, f64::from(width), f64::from(height), mark);
+                let device_scale = area
+                    .native()
+                    .and_then(|native| native.surface())
+                    .map_or(1.0, |surface| surface.scale());
+                let mut cache_ref = cache.borrow_mut();
+                let size = (f64::from(width), f64::from(height));
+                draw_slide(cr, list, &mut cache_ref, size, device_scale, mark);
+                schedule_prefetch(&ctx, &cache, &mut cache_ref, offset);
             }
         });
     }
