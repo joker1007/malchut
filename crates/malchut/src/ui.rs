@@ -512,9 +512,23 @@ fn build_presenter(ctx: &Rc<Shared>) -> Rc<Win> {
     };
     let current = slide_area(ctx, 0, false);
     let next = slide_area(ctx, 1, false);
-    next.set_hexpand(false);
     next.set_vexpand(false);
-    next.set_content_height(300);
+    // 高さを幅から決めて、割り当てられた幅いっぱいに次のスライドを映す。
+    // サイズ確定の途中では要求を変えられないので、アイドル時に設定する。
+    {
+        let ctx = ctx.clone();
+        next.connect_resize(move |area, width, _| {
+            let state = ctx.state.borrow();
+            let ratio = state
+                .list(state.current())
+                .map_or(9.0 / 16.0, |list| list.height / list.width);
+            let height = (f64::from(width) * ratio).round() as i32;
+            if area.content_height() != height {
+                let area = area.clone();
+                glib::idle_add_local_once(move || area.set_content_height(height));
+            }
+        });
+    }
 
     let notes = gtk::Label::builder()
         .xalign(0.0)
@@ -529,15 +543,18 @@ fn build_presenter(ctx: &Rc<Shared>) -> Rc<Win> {
         .build();
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    side.set_width_request(540);
     side.append(&caption("次のスライド"));
     side.append(&next);
     side.append(&caption("ノート"));
     side.append(&notes_scroll);
 
-    let slides = gtk::Box::new(gtk::Orientation::Horizontal, 16);
-    slides.append(&current);
-    slides.append(&side);
+    // 現在のスライドと右の列を、ウィンドウの幅に対して 2:1 で分ける。
+    let slides = gtk::Grid::builder()
+        .column_homogeneous(true)
+        .column_spacing(16)
+        .build();
+    slides.attach(&current, 0, 0, 2, 1);
+    slides.attach(&side, 2, 0, 1, 1);
 
     let timer = gtk::Label::new(None);
     timer.add_css_class("malchut-timer");
