@@ -3,6 +3,7 @@
 use std::f64::consts::{FRAC_PI_2, PI};
 
 use crate::layout::{DisplayList, Item};
+use crate::picture::Picture;
 use crate::theme::Color;
 
 /// 論理座標のまま描く。拡大率は呼び出し側が `cr.scale` で決める。
@@ -48,6 +49,7 @@ pub fn paint(cr: &cairo::Context, list: &DisplayList) -> Result<(), cairo::Error
                 radius,
                 shadow,
                 opacity,
+                tint,
             } => {
                 if *shadow {
                     paint_shadow(cr, *x, *y, *width, *height, *radius)?;
@@ -56,7 +58,10 @@ pub fn paint(cr: &cairo::Context, list: &DisplayList) -> Result<(), cairo::Error
                 rounded_rect(cr, *x, *y, *width, *height, *radius);
                 cr.clip();
                 cr.translate(*x, *y);
-                let painted = picture.paint(cr, *source, *width, *height, *opacity);
+                let painted = match tint {
+                    None => picture.paint(cr, *source, *width, *height, *opacity),
+                    Some(tint) => paint_tinted(cr, picture, *source, *width, *height, *opacity, *tint),
+                };
                 cr.restore()?;
                 painted?;
             }
@@ -77,6 +82,38 @@ pub fn render_image(list: &DisplayList, scale: f64) -> Result<cairo::ImageSurfac
     paint(&cr, list)?;
     drop(cr);
     Ok(surface)
+}
+
+/// 画像に色を重ねて描く。呼び出し側で、画像の矩形にクリップしてあること。
+fn paint_tinted(
+    cr: &cairo::Context,
+    picture: &Picture,
+    source: (f64, f64, f64, f64),
+    width: f64,
+    height: f64,
+    opacity: f64,
+    tint: Color,
+) -> Result<(), cairo::Error> {
+    // 透明部分のない画像なら、上から塗るだけで済む。PDF でも元の画像データのまま残る。
+    if picture.is_opaque() && opacity >= 1.0 {
+        cr.save()?;
+        let painted = picture.paint(cr, source, width, height, 1.0);
+        cr.restore()?;
+        painted?;
+        set_color(cr, tint);
+        return cr.paint();
+    }
+    // 透明部分には色を載せず、全体の不透明度は色を重ねた結果に掛ける。
+    cr.push_group();
+    cr.save()?;
+    let painted = picture.paint(cr, source, width, height, 1.0);
+    cr.restore()?;
+    painted?;
+    cr.set_operator(cairo::Operator::Atop);
+    set_color(cr, tint);
+    cr.paint()?;
+    cr.pop_group_to_source()?;
+    cr.paint_with_alpha(opacity)
 }
 
 /// 少しずつ広げた半透明の矩形を重ねて、ぼかした影に見せる。

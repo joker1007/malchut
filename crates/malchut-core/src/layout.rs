@@ -107,6 +107,8 @@ pub enum Item {
         radius: f64,
         shadow: bool,
         opacity: f64,
+        /// 画像に重ねる色。アルファが重ねる強さ。
+        tint: Option<Color>,
     },
 }
 
@@ -608,6 +610,7 @@ impl<'a> Flow<'a> {
                 radius: image.round.0,
                 shadow: image.shadow,
                 opacity: image.opacity.0,
+                tint: tint_color(image),
             }),
             Err(message) => {
                 self.rect(x, y, width, height, 0.0, self.style.palette.code_background);
@@ -694,6 +697,7 @@ impl<'a> Flow<'a> {
                         radius: 0.0,
                         shadow: false,
                         opacity: image.opacity.0,
+                        tint: tint_color(image),
                     });
                 }
                 Ok(picture) => {
@@ -986,6 +990,20 @@ impl<'a> Flow<'a> {
         }
         y - top
     }
+}
+
+/// `darken` / `lighten` の指定を、画像に重ねる色にする。
+fn tint_color(image: &Image) -> Option<Color> {
+    let (level, strength) = match image.tint? {
+        Tint::Darken(strength) => (0.0, strength.0),
+        Tint::Lighten(strength) => (1.0, strength.0),
+    };
+    Some(Color {
+        r: level,
+        g: level,
+        b: level,
+        a: strength,
+    })
 }
 
 /// 元画像のうち描く範囲 (`crop` の指定、なければ全体)。

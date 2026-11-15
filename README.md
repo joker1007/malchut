@@ -137,6 +137,8 @@ Put images in a paragraph of their own, and list options in the alt text.
 | `align:left\|center\|right` | Horizontal position in the text flow (centered by default) |
 | `crop:x,y,w,h` | Crop the source image |
 | `round:16` `shadow` `opacity:0.6` | Rounded corners, shadow, opacity |
+| `darken` / `darken:0.6` | Blend toward black so that text on top stays readable (strength 0–1, 0.5 by default) |
+| `lighten` / `lighten:0.6` | Blend toward white (strength 0–1, 0.5 by default) |
 | `![...](a.png "caption")` | Caption |
 
 Several images in one paragraph are laid out side by side.

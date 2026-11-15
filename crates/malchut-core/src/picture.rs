@@ -51,6 +51,11 @@ impl Picture {
         }
     }
 
+    /// 透明な部分を持たない画像かどうか。
+    pub fn is_opaque(&self) -> bool {
+        matches!(self, Picture::Raster(surface) if surface.format() == cairo::Format::Rgb24)
+    }
+
     /// 元画像の `source` (x, y, 幅, 高さ) の範囲を、原点から幅 `width`・高さ `height` に描く。
     /// 範囲外にはみ出す部分は、呼び出し側のクリップで切り落とす。
     pub fn paint(
@@ -84,13 +89,19 @@ impl Picture {
     }
 }
 
-/// Pixbuf (RGB / RGBA、非乗算) を Cairo の ARGB32 (乗算済み) に変換する。
+/// Pixbuf (RGB / RGBA、非乗算) を Cairo の画像に変換する。アルファを持たない画像は RGB24、
+/// 持つ画像は ARGB32 (乗算済み) にする。
 fn surface_from_pixbuf(pixbuf: &gdk_pixbuf::Pixbuf) -> Result<cairo::ImageSurface, cairo::Error> {
     let (width, height) = (pixbuf.width(), pixbuf.height());
     let channels = pixbuf.n_channels() as usize;
     let source_stride = pixbuf.rowstride() as usize;
     let pixels = pixbuf.read_pixel_bytes();
-    let mut surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width, height)?;
+    let format = if channels == 4 {
+        cairo::Format::ARgb32
+    } else {
+        cairo::Format::Rgb24
+    };
+    let mut surface = cairo::ImageSurface::create(format, width, height)?;
     let stride = surface.stride() as usize;
     {
         let mut data = surface.data().map_err(|_| cairo::Error::SurfaceFinished)?;

@@ -175,9 +175,22 @@ graph LR
 ---
 <!-- _class: lead invert -->
 
-![bg opacity:0.35](assets/photo.jpg)
+![bg darken:0.6](assets/photo.jpg)
 
 # 全面背景
+
+背景を `darken` で暗くして文字を読みやすくする
+
+---
+
+## 背景を明るくする
+
+![bg lighten:0.7](assets/photo.jpg)
+
+- `lighten` は背景を白に寄せる
+- 強さを省略すると 0.5 になる
+
+![h:260 darken](assets/logo.svg) ![h:260](assets/logo.svg) ![h:260 lighten](assets/logo.svg)
 
 ---
 

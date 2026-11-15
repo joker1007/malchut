@@ -196,6 +196,15 @@ pub struct Image {
     pub round: Num,
     pub shadow: bool,
     pub opacity: Num,
+    /// 上に載せる文字を読みやすくするための明るさの調整。
+    pub tint: Option<Tint>,
+}
+
+/// 画像を黒または白に寄せる調整。値は寄せる強さ (0〜1)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Tint {
+    Darken(Num),
+    Lighten(Num),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

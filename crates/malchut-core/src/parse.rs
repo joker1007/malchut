@@ -8,6 +8,9 @@ use crate::model::*;
 
 const FRONT_MATTER_DELIMITER: &str = "---";
 
+/// `darken` / `lighten` で強さを省略したときの値。
+const DEFAULT_TINT: f64 = 0.5;
+
 pub fn parse(src: &str) -> Deck {
     let arena = Arena::new();
     let mut options = Options::default();
@@ -444,6 +447,7 @@ impl Parser {
             round: Num(0.0),
             shadow: false,
             opacity: Num(1.0),
+            tint: None,
         };
         let mut background = false;
         let mut fit = Fit::Cover;
@@ -514,6 +518,23 @@ impl Parser {
                         .is_ok()
                 }
                 ("round", _) => value.parse().map(|r| image.round = Num(r)).is_ok(),
+                ("darken" | "lighten", _) => {
+                    // 強さを省略したら、文字が読める程度の既定値にする。
+                    let strength = if value.is_empty() {
+                        Some(DEFAULT_TINT)
+                    } else {
+                        value.parse::<f64>().ok().filter(|s| (0.0..=1.0).contains(s))
+                    };
+                    strength
+                        .map(|s| {
+                            image.tint = Some(if key == "darken" {
+                                Tint::Darken(Num(s))
+                            } else {
+                                Tint::Lighten(Num(s))
+                            });
+                        })
+                        .is_some()
+                }
                 ("opacity", _) => value
                     .parse::<f64>()
                     .ok()

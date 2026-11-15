@@ -26,9 +26,10 @@ fn overflow_is_detected() {
 #[test]
 fn images_render_and_missing_ones_do_not_fail() {
     let examples = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples");
+    // 色を重ねる描き方は、透明部分の有無と不透明度で経路が分かれるので、それぞれ通す。
     let deck = parse(
-        "![w:300](assets/photo.jpg) ![w:300](assets/logo.svg) ![w:300](assets/missing.png)\n\n\
-         ![bg left:30%](assets/square.png)\n![at:50%,50% anchor:center](assets/logo.svg)\n",
+        "![w:300 darken](assets/photo.jpg) ![w:300 lighten](assets/logo.svg) ![w:300](assets/missing.png)\n\n\
+         ![bg left:30% darken opacity:0.8](assets/square.png)\n![at:50%,50% anchor:center](assets/logo.svg)\n",
     );
     let theme = Theme::builtin("default").unwrap();
     let lists = layout_deck(&deck, &theme, &examples);

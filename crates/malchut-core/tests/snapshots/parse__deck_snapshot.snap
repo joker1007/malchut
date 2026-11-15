@@ -200,6 +200,7 @@ Deck {
                             opacity: Num(
                                 1.0,
                             ),
+                            tint: None,
                         },
                         Image {
                             src: "b.svg",
@@ -246,6 +247,7 @@ Deck {
                             opacity: Num(
                                 1.0,
                             ),
+                            tint: None,
                         },
                     ],
                 ),
@@ -286,6 +288,7 @@ Deck {
                     opacity: Num(
                         0.5,
                     ),
+                    tint: None,
                 },
             ],
             side: Some(
@@ -313,6 +316,7 @@ Deck {
                     opacity: Num(
                         1.0,
                     ),
+                    tint: None,
                 },
             ),
             floats: [
@@ -350,6 +354,7 @@ Deck {
                     opacity: Num(
                         1.0,
                     ),
+                    tint: None,
                 },
             ],
             anchors: [],

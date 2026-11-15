@@ -82,6 +82,23 @@ fn images_are_routed_by_placement() {
 }
 
 #[test]
+fn tint_strength_defaults_when_omitted() {
+    use malchut_core::model::{Num, Tint};
+    let deck = parse("![bg darken](a.png)\n![bg lighten:0.8](b.png)\n![bg darken:2](c.png)\n");
+    let tints: Vec<_> = deck.slides[0].backgrounds.iter().map(|image| image.tint).collect();
+    assert_eq!(
+        tints,
+        [
+            Some(Tint::Darken(Num(0.5))),
+            Some(Tint::Lighten(Num(0.8))),
+            None
+        ]
+    );
+    // 範囲外の強さは無視して、警告にする。
+    assert_eq!(deck.diagnostics.len(), 1, "{:?}", deck.diagnostics);
+}
+
+#[test]
 fn bad_image_options_are_reported() {
     let deck = parse("![w:abc opacity:2 wat:1 left:40%](a.png)\n\ntext ![](b.png)\n");
     assert_eq!(deck.diagnostics.len(), 5, "{:?}", deck.diagnostics);
